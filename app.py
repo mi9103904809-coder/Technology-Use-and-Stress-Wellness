@@ -9,6 +9,71 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# -------------------- MODERN DASHBOARD THEME --------------------
+def apply_theme():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #0B1020 0%, #17133A 55%, #20204A 100%);
+        color: #F4F7FF;
+    }
+    [data-testid="stHeader"] { background: rgba(11, 16, 32, 0.75); }
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #101A35 0%, #25205A 100%);
+        border-right: 1px solid rgba(104, 225, 253, 0.45);
+    }
+    [data-testid="stSidebar"] * { color: #F4F7FF !important; }
+    h1, h2, h3, h4, h5, h6 { color: #FFFFFF !important; }
+    p, label, .stMarkdown { color: #DCE7FA; }
+    [data-testid="stMetric"] {
+        background: linear-gradient(145deg, rgba(35, 54, 102, 0.96), rgba(43, 35, 91, 0.96));
+        padding: 18px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(104, 225, 253, 0.55);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    }
+    [data-testid="stMetricLabel"] { color: #DCE7FA !important; }
+    [data-testid="stMetricValue"] { color: #68E1FD !important; }
+    div[data-baseweb="select"] > div {
+        background-color: #202B50;
+        border-color: #68E1FD;
+        border-radius: 10px;
+    }
+    div[data-testid="stDataFrame"] {
+        border: 1px solid rgba(104, 225, 253, 0.35);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .stButton button {
+        background: linear-gradient(90deg, #6C63FF, #28C7D9);
+        color: white;
+        border: 0;
+        border-radius: 10px;
+    }
+    hr { border-color: rgba(104, 225, 253, 0.25); }
+    </style>
+    """, unsafe_allow_html=True)
+
+def show_chart(fig, use_container_width=True):
+    fig.update_layout(
+        template="plotly_dark",
+        colorway=["#68E1FD", "#A78BFA", "#F472B6", "#34D399", "#FBBF24", "#60A5FA"],
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(15,23,42,0.25)",
+        font=dict(color="#EAF2FF", family="Arial", size=13),
+        title_font=dict(color="#FFFFFF", size=21),
+        title_x=0.5,
+        hoverlabel=dict(bgcolor="#28245B", font_color="white", bordercolor="#68E1FD"),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#EAF2FF")),
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(180,198,230,0.16)", color="#DCE7FA", zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(180,198,230,0.16)", color="#DCE7FA", zeroline=False)
+    st.plotly_chart(fig, use_container_width=use_container_width)
+
+apply_theme()
+
 st.title("Tech Use and Stress Wellness Dashboard")
 
 # Load dataset
@@ -48,8 +113,8 @@ st.dataframe(filtered_df.head(5), use_container_width=True)
 st.write("Total Users:", len(filtered_df))
 
 # Four dashboards
-dashboard = st.selectbox(
-    "Select Dashboard",
+dashboard = st.sidebar.selectbox(
+    "Choose Dashboard",
     [
         "Technology Usage Overview",
         "Stress & Mental Wellness",
@@ -69,16 +134,16 @@ elif dashboard == "Technology Usage Overview":
     c3.metric("Median Screen Time", round(filtered_df["daily_screen_time_hours"].median(), 2))
     c4.metric("Average Social Media Hours", round(filtered_df["social_media_hours"].mean(), 2))
 
-    st.plotly_chart(px.histogram(filtered_df, x="daily_screen_time_hours", title="Screen Time Distribution"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="daily_screen_time_hours", title="Screen Time Distribution"), use_container_width=True)
 
     device_cols = ["phone_usage_hours", "laptop_usage_hours", "tablet_usage_hours", "tv_usage_hours"]
     device_data = filtered_df[device_cols].sum().reset_index()
     device_data.columns = ["Device", "Total Usage"]
-    st.plotly_chart(px.bar(device_data, x="Device", y="Total Usage", title="Device-wise Usage"), use_container_width=True)
+    show_chart(px.bar(device_data, x="Device", y="Total Usage", title="Device-wise Usage"), use_container_width=True)
 
-    st.plotly_chart(px.box(filtered_df, x="screen_time_group", y="daily_screen_time_hours", title="Screen Time Groups"), use_container_width=True)
-    st.plotly_chart(px.bar(filtered_df.groupby("location_type").size().reset_index(name="Users"), x="location_type", y="Users", title="Users by Location"), use_container_width=True)
-    st.plotly_chart(px.scatter(filtered_df, x="social_media_hours", y="daily_screen_time_hours", title="Screen Time vs Social Media"), use_container_width=True)
+    show_chart(px.box(filtered_df, x="screen_time_group", y="daily_screen_time_hours", title="Screen Time Groups"), use_container_width=True)
+    show_chart(px.bar(filtered_df.groupby("location_type").size().reset_index(name="Users"), x="location_type", y="Users", title="Users by Location"), use_container_width=True)
+    show_chart(px.scatter(filtered_df, x="social_media_hours", y="daily_screen_time_hours", title="Screen Time vs Social Media"), use_container_width=True)
 
 elif dashboard == "Stress & Mental Wellness":
     st.header("Stress & Mental Wellness")
@@ -88,13 +153,13 @@ elif dashboard == "Stress & Mental Wellness":
     c3.metric("Weekly Anxiety Score", round(filtered_df["weekly_anxiety_score"].mean(), 2))
     c4.metric("Weekly Depression Score", round(filtered_df["weekly_depression_score"].mean(), 2))
 
-    st.plotly_chart(px.histogram(filtered_df, x="stress_level", title="Stress Level Distribution"), use_container_width=True)
-    st.plotly_chart(px.bar(filtered_df.groupby("screen_time_group", observed=False)["stress_level"].mean().reset_index(), x="screen_time_group", y="stress_level", title="Average Stress by Screen Time Group"), use_container_width=True)
-    st.plotly_chart(px.scatter(filtered_df, x="weekly_anxiety_score", y="weekly_depression_score", title="Anxiety vs Depression"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="stress_level", title="Stress Level Distribution"), use_container_width=True)
+    show_chart(px.bar(filtered_df.groupby("screen_time_group", observed=False)["stress_level"].mean().reset_index(), x="screen_time_group", y="stress_level", title="Average Stress by Screen Time Group"), use_container_width=True)
+    show_chart(px.scatter(filtered_df, x="weekly_anxiety_score", y="weekly_depression_score", title="Anxiety vs Depression"), use_container_width=True)
 
     corr = filtered_df.select_dtypes(include="number").corr()
-    st.plotly_chart(px.imshow(corr, text_auto=True, title="Correlation Heatmap"), use_container_width=True)
-    st.plotly_chart(px.box(filtered_df, x="gender", y="stress_level", title="Stress by Gender"), use_container_width=True)
+    show_chart(px.imshow(corr, text_auto=True, title="Correlation Heatmap"), use_container_width=True)
+    show_chart(px.box(filtered_df, x="gender", y="stress_level", title="Stress by Gender"), use_container_width=True)
 
 elif dashboard == "Lifestyle & Wellness Habits":
     st.header("Lifestyle & Wellness Habits")
@@ -105,16 +170,16 @@ elif dashboard == "Lifestyle & Wellness Habits":
     c3.metric("Caffeine Intake", round(filtered_df["caffeine_intake_mg_per_day"].mean(), 2))
     c4.metric("Healthy Eating %", round(healthy.mean() * 100, 2))
 
-    st.plotly_chart(px.scatter(filtered_df, x="physical_activity_hours_per_week", y="stress_level", title="Physical Activity vs Stress"), use_container_width=True)
-    st.plotly_chart(px.histogram(filtered_df, x="mindfulness_minutes_per_day", color="gender", title="Mindfulness by Gender"), use_container_width=True)
+    show_chart(px.scatter(filtered_df, x="physical_activity_hours_per_week", y="stress_level", title="Physical Activity vs Stress"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="mindfulness_minutes_per_day", color="gender", title="Mindfulness by Gender"), use_container_width=True)
 
     eating_data = pd.DataFrame({
         "Eating Habit": ["Healthy", "Unhealthy"],
         "Users": [healthy.sum(), (~healthy).sum()]
     })
-    st.plotly_chart(px.pie(eating_data, names="Eating Habit", values="Users", hole=0.5, title="Healthy vs Unhealthy Eating"), use_container_width=True)
-    st.plotly_chart(px.violin(filtered_df, x="screen_time_group", y="physical_activity_hours_per_week", title="Activity by Screen Time Group"), use_container_width=True)
-    st.plotly_chart(px.histogram(filtered_df, x="caffeine_intake_mg_per_day", title="Caffeine Distribution"), use_container_width=True)
+    show_chart(px.pie(eating_data, names="Eating Habit", values="Users", hole=0.5, title="Healthy vs Unhealthy Eating"), use_container_width=True)
+    show_chart(px.violin(filtered_df, x="screen_time_group", y="physical_activity_hours_per_week", title="Activity by Screen Time Group"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="caffeine_intake_mg_per_day", title="Caffeine Distribution"), use_container_width=True)
 
 elif dashboard == "Demographics & Wellness Apps":
     st.header("Demographics & Wellness Apps")
@@ -125,15 +190,15 @@ elif dashboard == "Demographics & Wellness Apps":
     c3.metric("Average Age", round(filtered_df["age"].mean(), 2))
     c4.metric("Average Stress", round(filtered_df["stress_level"].mean(), 2))
 
-    st.plotly_chart(px.histogram(filtered_df, x="age_group", title="Users by Age Group"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="age_group", title="Users by Age Group"), use_container_width=True)
 
     app_data = pd.DataFrame({
         "App Usage": ["Uses Apps", "Does Not Use Apps"],
         "Users": [apps.sum(), (~apps).sum()]
     })
-    st.plotly_chart(px.pie(app_data, names="App Usage", values="Users", hole=0.5, title="Wellness App Adoption"), use_container_width=True)
-    st.plotly_chart(px.bar(filtered_df.groupby("gender")["mental_health_score"].mean().reset_index(), x="gender", y="mental_health_score", title="Mental Health by Gender"), use_container_width=True)
-    st.plotly_chart(px.violin(filtered_df, x="location_type", y="stress_level", title="Stress by Location"), use_container_width=True)
-    st.plotly_chart(px.histogram(filtered_df, x="mental_health_score", color="uses_wellness_apps", title="Mental Health Score by App Usage"), use_container_width=True)
+    show_chart(px.pie(app_data, names="App Usage", values="Users", hole=0.5, title="Wellness App Adoption"), use_container_width=True)
+    show_chart(px.bar(filtered_df.groupby("gender")["mental_health_score"].mean().reset_index(), x="gender", y="mental_health_score", title="Mental Health by Gender"), use_container_width=True)
+    show_chart(px.violin(filtered_df, x="location_type", y="stress_level", title="Stress by Location"), use_container_width=True)
+    show_chart(px.histogram(filtered_df, x="mental_health_score", color="uses_wellness_apps", title="Mental Health Score by App Usage"), use_container_width=True)
 
 st.caption("Tech Use and Stress Wellness Analytics Project")
